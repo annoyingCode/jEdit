@@ -1626,6 +1626,16 @@
 	</CODE>
 </ACTION>
 
+<ACTION NAME="submit-bug">
+	<CODE>
+		import java.awt.Desktop;
+		if (Desktop.isDesktopSupported())
+		{
+			Desktop.getDesktop().browse(new URI("https://sourceforge.net/p/jedit/bugs/"));
+		}
+	</CODE>
+</ACTION>
+
 <ACTION NAME="vertical-paste">
 	<CODE>
 		Registers.paste(textArea,'$',true);
