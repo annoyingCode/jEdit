@@ -409,11 +409,7 @@ about.label=$About jEdit...
 help.label=jEdit $Help
 tip-of-the-day.label=$Tip of the Day
 userFeedback.label=Make a suggestion...
-#}}}
-
-#{{{ Submit bug menu
-bug-menu.label=$Submit Bug
-submit-bug.label=Link...
+submit-bug.label=Submit Bug
 #}}}
 
 #}}}

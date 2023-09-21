@@ -137,7 +137,7 @@ systrayicon=true
 #}}}
 
 #{{{ Menu bar
-view.mbar=file edit search markers folds view utils macros plugins help-menu bug-menu
+view.mbar=file edit search markers folds view utils macros plugins help-menu
 
 #{{{ File menu
 file=new-file \
@@ -532,11 +532,8 @@ plugins.code=new PluginsProvider();
 help-menu=about \
      help \
      tip-of-the-day \
-     userFeedback
-#}}}
-
-#{{{ Bug menu
-bug-menu=submit-bug
+     userFeedback \
+     submit-bug
 #}}}
 
 #}}}
