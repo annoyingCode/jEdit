@@ -143,6 +143,7 @@ public class StyleEditor extends EnhancedDialog implements ActionListener
 		fgColor.setEnabled(fg != null);
 		panel.add(fgColor);
 
+		// yahan background color hay
 		Color bg = style.getBackgroundColor();
 		bgColorCheckBox = new JCheckBox(jEdit.getProperty("style-editor.bgColor"));
 		bgColorCheckBox.setSelected(bg != null);

@@ -64,7 +64,7 @@ public class SyntaxUtilities
 	 */
 	public static Color parseColor(String name, Color defaultColor)
 	{
-		if(name == null || name.length() == 0)
+		if(name == null || name.isEmpty())
 			return defaultColor;
 
 		name = name.trim();
@@ -140,6 +140,7 @@ public class SyntaxUtilities
 			else if(s.startsWith("bgColor:"))
 			{
 				if(color)
+					// yahan se background color decode ho rha hay
 					bgColor = parseColor(s.substring(8), null);
 			}
 			else if(s.startsWith("style:"))

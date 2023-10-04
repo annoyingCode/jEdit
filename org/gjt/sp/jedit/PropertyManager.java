@@ -159,7 +159,7 @@ class PropertyManager
 		 */
 		if(value == null)
 		{
-			if(prop == null || prop.length() == 0)
+			if(prop == null || prop.isEmpty())
 				user.remove(name);
 			else
 				user.setProperty(name,"");
@@ -206,6 +206,7 @@ class PropertyManager
 	//{{{ getDefaultProperty() method
 	private String getDefaultProperty(String name)
 	{
+		// yahan se jedit.props wali value utha rha hay
 		String value = site.getProperty(name);
 		if(value != null)
 			return value;

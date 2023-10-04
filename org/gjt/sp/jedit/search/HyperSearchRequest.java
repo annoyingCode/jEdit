@@ -50,6 +50,8 @@ class HyperSearchRequest extends Task
 		this.matcher = matcher;
 
 		this.results = results;
+
+		// yahan search string hay
 		searchString = SearchAndReplace.getSearchString();
 		rootSearchNode = new DefaultMutableTreeNode(new HyperSearchOperationNode(searchString, matcher));
 
