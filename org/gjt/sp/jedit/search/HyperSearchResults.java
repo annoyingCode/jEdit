@@ -38,7 +38,6 @@ import java.util.List;
 import org.gjt.sp.jedit.EditBus.EBHandler;
 import org.gjt.sp.jedit.gui.DefaultFocusComponent;
 import org.gjt.sp.jedit.gui.RolloverButton;
-import org.gjt.sp.jedit.gui.StyleEditor;
 import org.gjt.sp.jedit.msg.*;
 import org.gjt.sp.jedit.search.SearchMatcher.Match;
 import org.gjt.sp.jedit.syntax.SyntaxStyle;
@@ -72,12 +71,6 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
         toolBar.add(Box.createGlue());
 
         ActionHandler ah = new ActionHandler();
-
-        highlight = new RolloverButton();
-        highlight.setToolTipText(jEdit.getProperty(
-                "hypersearch-results.highlight.label"));
-        highlight.addActionListener(ah);
-        toolBar.add(highlight);
 
         clear = new RolloverButton(GUIUtilities.loadIcon(
                 jEdit.getProperty("hypersearch-results.clear.icon")));
@@ -308,8 +301,6 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
     private final JTree resultTree;
     private final DefaultMutableTreeNode resultTreeRoot;
     private final DefaultTreeModel resultTreeModel;
-
-    private final RolloverButton highlight;
     private final RolloverButton clear;
     private final RolloverButton multi;
     private final RolloverButton stop;
@@ -318,13 +309,6 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
     //{{{ updateHighlightStatus() method
     private void updateHighlightStatus() {
         /* panga */
-//		jEdit.setProperty(HIGHLIGHT_PROP, "bgColor:#00ff00");
-
-        String prop = jEdit.getProperty(HIGHLIGHT_PROP);
-        if (prop != null && !prop.isEmpty())
-            highlight.setIcon(GUIUtilities.loadIcon(jEdit.getProperty("hypersearch-results.match.highlight.icon")));
-        else
-            highlight.setIcon(GUIUtilities.loadIcon(jEdit.getProperty("hypersearch-results.match.normal.icon")));
         resultTree.repaint();
     } //}}}
 
@@ -459,17 +443,7 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
         @Override
         public void actionPerformed(ActionEvent evt) {
             Object source = evt.getSource();
-            if (source == highlight) {
-                String prop = jEdit.getProperty(HIGHLIGHT_PROP);
-                Font f = (resultTree != null) ? resultTree.getFont() :
-                        UIManager.getFont("Tree.font");
-                SyntaxStyle style = new StyleEditor(jEdit.getActiveView(),
-                        HtmlUtilities.parseHighlightStyle(prop, f),
-                        "hypersearch").getStyle();
-                if (style != null)
-                    jEdit.setProperty(HIGHLIGHT_PROP, GUIUtilities.getStyleString(style));
-                updateHighlightStatus();
-            } else if (source == clear) {
+            if (source == clear) {
                 removeAllNodes();
             } else if (source == multi) {
                 multiStatus = !multiStatus;
@@ -491,13 +465,11 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
     //{{{ HighlightingTree class
     class HighlightingTree extends JTree {
         private String prop;
-        private String prop2;
         private String styleTag;
 
         HighlightingTree(DefaultTreeModel model) {
             super(model);
             prop = jEdit.getProperty(HIGHLIGHT_PROP);
-            prop2 = " bgColor:#eeeeee";
 
             // yahan se color utha rha hay
             if (prop != null && !prop.isEmpty()) {
@@ -515,21 +487,20 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
                     row, hasFocus);
 
             /* panga in the core */
-            // Regular expression patterns for comments and source code lines
-            String commentPattern = "//.*|/\\*(.|[\\r\\n])*?\\*/";
 
-            // Create Pattern objects
-            Pattern commentRegex = Pattern.compile(commentPattern);
+            int i = s.indexOf(": ");
+            if (i > 0)
+                i += 2;
+            else
+                i = 0;
 
-            // Matcher objects
-            Matcher commentMatcher = commentRegex.matcher(s);
+            boolean isComment = s.substring(i).startsWith("//") || s.substring(i).startsWith("/*") || s.substring(i).endsWith("*/") || s.substring(i).startsWith("*");
 
-            if (commentMatcher.find()) {
+            if (isComment) {
                 jEdit.setProperty(HIGHLIGHT_PROP, "bgColor:#00ff00");
             } else {
                 jEdit.setProperty(HIGHLIGHT_PROP, "bgColor:#ff0000");
             }
-
 
             String newProp = jEdit.getProperty(HIGHLIGHT_PROP);
             if (newProp == null || newProp.isEmpty())
@@ -548,11 +519,6 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
             }
             SearchMatcher matcher =
                     ((HyperSearchOperationNode) node.getUserObject()).getSearchMatcher();
-            int i = s.indexOf(": ");
-            if (i > 0)
-                i += 2;
-            else
-                i = 0;
             Match m = null;
             List<Integer> matches = new ArrayList<Integer>();
             try {
