@@ -140,7 +140,7 @@ public class SyntaxUtilities
 			else if(s.startsWith("bgColor:"))
 			{
 				if(color)
-					// yahan se background color decode ho rha hay
+					// De-coding the background color from string to RGB value
 					bgColor = parseColor(s.substring(8), null);
 			}
 			else if(s.startsWith("style:"))

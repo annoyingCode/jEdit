@@ -32,7 +32,6 @@ import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.util.*;
-import java.util.regex.*;
 import java.util.List;
 
 import org.gjt.sp.jedit.EditBus.EBHandler;
@@ -281,7 +280,6 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
                 } else {
                     treePath = new TreePath(selectNode.getPath());
                 }
-                // yahan kuch hay - II
                 resultTree.setSelectionPath(treePath);
                 resultTree.scrollPathToVisible(
                         treePath);
@@ -471,7 +469,7 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
             super(model);
             prop = jEdit.getProperty(HIGHLIGHT_PROP);
 
-            // yahan se color utha rha hay
+            // Getting the HTML representation of the style
             if (prop != null && !prop.isEmpty()) {
                 Font f = (resultTree != null) ? resultTree.getFont() :
                         UIManager.getFont("Tree.font");
@@ -482,7 +480,8 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
         @Override
         public String convertValueToText(Object value, boolean selected,
                                          boolean expanded, boolean leaf, int row, boolean hasFocus) {
-            // yahan pr search string or uski sari aulaad store karo
+            // Storing all the parent and child nodes of
+            // the search string
             String s = super.convertValueToText(value, selected, expanded, leaf,
                     row, hasFocus);
 
@@ -539,7 +538,8 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
                     m = null;
                 }
             }
-            // yahan string ko highlight
+            // Getting the HTML representations of the string with
+            // highlighted sub-strings
             return HtmlUtilities.highlightString(s, styleTag, matches);
         }
     } //}}}

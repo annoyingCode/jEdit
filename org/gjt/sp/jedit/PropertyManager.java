@@ -206,7 +206,7 @@ class PropertyManager
 	//{{{ getDefaultProperty() method
 	private String getDefaultProperty(String name)
 	{
-		// yahan se jedit.props wali value utha rha hay
+		// Getting the jedit.props file
 		String value = site.getProperty(name);
 		if(value != null)
 			return value;

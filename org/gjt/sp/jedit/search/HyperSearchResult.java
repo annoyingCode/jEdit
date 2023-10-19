@@ -225,7 +225,6 @@ public class HyperSearchResult implements HyperSearchNode
 
 		}
 
-		// yahan par kuch hay - I
 		public void run()
 		{
 			Selection[] s = getSelection();
