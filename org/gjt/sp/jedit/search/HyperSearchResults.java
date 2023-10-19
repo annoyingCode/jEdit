@@ -493,7 +493,7 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
             else
                 i = 0;
 
-            boolean isComment = s.substring(i).startsWith("//") || s.substring(i).startsWith("/*") || s.substring(i).endsWith("*/") || s.substring(i).startsWith("*");
+            boolean isComment = s.substring(i).contains("//") || s.substring(i).contains("/*") || s.substring(i).contains("*/") || s.substring(i).startsWith("*") || s.substring(i).contains("<!--") || s.substring(i).contains("-->");
 
             if (isComment) {
                 jEdit.setProperty(HIGHLIGHT_PROP, "bgColor:#00ff00");
