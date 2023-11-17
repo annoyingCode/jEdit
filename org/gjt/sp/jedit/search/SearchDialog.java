@@ -300,6 +300,10 @@ public class SearchDialog extends EnhancedDialog
 		// directory controls
 		focusOrder.add(filter);
 		focusOrder.add(synchronize);
+		//{{{ Phase 3
+		focusOrder.add(modifiedFrom);
+		focusOrder.add(modifiedTo);
+		//}}}
 		focusOrder.add(directory);
 		focusOrder.add(choose);
 		focusOrder.add(searchSubDirectories);
@@ -336,10 +340,14 @@ public class SearchDialog extends EnhancedDialog
 		searchAllBuffers, searchDirectory;
 
 	// multifile settings
-	private HistoryTextField filter, directory;
+	private HistoryTextField filter, directory, modifiedFrom, modifiedTo;
 	private JCheckBox searchSubDirectories;
 	private JCheckBox skipBinaryFiles;
 	private JCheckBox skipHidden;
+
+	// {{{ Phase 3
+//	private JTextField modifiedFrom, modifiedTo;
+	// }}}
 	
 	private JButton choose;
 	private JButton synchronize;
@@ -596,6 +604,8 @@ public class SearchDialog extends EnhancedDialog
 		GridBagLayout layout = new GridBagLayout();
 		multifile.setLayout(layout);
 
+		// The cons object is used to set some constraints like the width, height
+		// offset, inset etc. of a textbox and other components.
 		GridBagConstraints cons = new GridBagConstraints();
 		cons.gridy = cons.gridwidth = cons.gridheight = 1;
 		cons.anchor = GridBagConstraints.WEST;
@@ -628,7 +638,6 @@ public class SearchDialog extends EnhancedDialog
 		cons.gridwidth = 1;
 		cons.weightx = 0.0;
 		cons.insets = new Insets(0,0,3,0);
-
 		synchronize = new JButton(jEdit.getProperty(
 			"search.synchronize"));
 		synchronize.setToolTipText(jEdit.getProperty(
@@ -639,7 +648,8 @@ public class SearchDialog extends EnhancedDialog
 		synchronize.addActionListener(actionListener);
 		layout.setConstraints(synchronize,cons);
 		multifile.add(synchronize);
-		
+
+		// Increases the height of the SearchDialogue Panel
 		cons.gridy++;
 
 		directory = new HistoryTextField("search.directory");
@@ -649,7 +659,6 @@ public class SearchDialog extends EnhancedDialog
 		label = new JLabel(jEdit.getProperty("search.directoryField"),
 			SwingConstants.RIGHT);
 		label.setBorder(new EmptyBorder(0,0,0,12));
-
 		label.setDisplayedMnemonic(jEdit.getProperty("search.directoryField.mnemonic")
 			.charAt(0));
 		label.setLabelFor(directory);
@@ -677,6 +686,58 @@ public class SearchDialog extends EnhancedDialog
 		cons.insets = new Insets(0,0,0,0);
 		cons.gridy++;
 		cons.gridwidth = 3;
+
+		//{{{ Phase 3
+		label = new JLabel(jEdit.getProperty("search.dateFilterField"),
+				SwingConstants.RIGHT);
+		label.setBorder(new EmptyBorder(0,0,0,12));
+		cons.insets = new Insets(0,0,3,0);
+		cons.weightx = 0.0;
+		layout.setConstraints(label,cons);
+		multifile.add(label);
+
+		// Modified from
+		modifiedFrom = new HistoryTextField("search.from");
+		modifiedFrom.setColumns(15);
+		modifiedFrom.addActionListener(actionListener);
+
+		label = new JLabel(jEdit.getProperty("search.fromField"),
+				SwingConstants.RIGHT);
+		label.setBorder(new EmptyBorder(0,0,0,12));
+		label.setLabelFor(modifiedFrom);
+		cons.insets = new Insets(0,0,3,0);
+		cons.weightx = 0.0;
+		layout.setConstraints(label,cons);
+		multifile.add(label);
+
+		cons.gridwidth = 3;
+		cons.insets = new Insets(0,0,3,6);
+		cons.weightx = 1.0;
+		layout.setConstraints(modifiedFrom,cons);
+		multifile.add(modifiedFrom);
+
+		// Modified to
+		modifiedTo = new HistoryTextField("search.to");
+		modifiedTo.setColumns(15);
+		modifiedTo.addActionListener(actionListener);
+
+		label = new JLabel(jEdit.getProperty("search.toField"),
+				SwingConstants.RIGHT);
+		label.setBorder(new EmptyBorder(0,0,0,12));
+		label.setLabelFor(modifiedTo);
+		cons.insets = new Insets(0,0,3,0);
+		cons.weightx = 0.0;
+		layout.setConstraints(label,cons);
+		multifile.add(label);
+
+		cons.gridwidth = 2;
+		cons.insets = new Insets(0,0,3,6);
+		cons.weightx = 1.0;
+		layout.setConstraints(modifiedTo,cons);
+		multifile.add(modifiedTo);
+
+		cons.gridy++;
+		// }}}
 
 		JPanel dirCheckBoxPanel = new JPanel();
  		searchSubDirectories = new JCheckBox(jEdit.getProperty(
@@ -767,7 +828,10 @@ public class SearchDialog extends EnhancedDialog
 		filter.setEnabled(searchAllBuffers.isSelected()
 			|| searchDirectory.isSelected());
 
+		//{{{ Phase 3
 		boolean searchDirs = searchDirectory.isSelected();
+		modifiedFrom.setEnabled(searchDirs);
+		modifiedTo.setEnabled(searchDirs);
 		directory.setEnabled(searchDirs);
 		choose.setEnabled(searchDirs);
 		searchSubDirectories.setEnabled(searchDirs);
@@ -783,6 +847,7 @@ public class SearchDialog extends EnhancedDialog
 			&& !searchSelection.isSelected());
 		replaceAndFindBtn.setEnabled(!hyperSearch.isSelected()
 			&& !searchSelection.isSelected());
+		//}}}
 	} //}}}
 
 	//{{{ save() method
@@ -857,7 +922,9 @@ public class SearchDialog extends EnhancedDialog
 					dset.setRecursive(recurse);
 				}
 				else
+					//{{{ Phase 3
 					fileset = new DirectoryListSet(directory,filter,recurse);
+					//}}}
 			}
 			else
 			{
@@ -1021,7 +1088,7 @@ public class SearchDialog extends EnhancedDialog
 		}
 	} //}}}
 
-	//{{{ MultiFileActionHandler class
+	//{{{ MultiFileActionHandler class, Phase 3
 	class MultiFileActionHandler implements ActionListener
 	{
 		public void actionPerformed(ActionEvent evt)

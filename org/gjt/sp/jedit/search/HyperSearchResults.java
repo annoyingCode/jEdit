@@ -306,7 +306,6 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
 
     //{{{ updateHighlightStatus() method
     private void updateHighlightStatus() {
-        /* panga */
         resultTree.repaint();
     } //}}}
 
@@ -484,8 +483,6 @@ public class HyperSearchResults extends JPanel implements DefaultFocusComponent 
             // the search string
             String s = super.convertValueToText(value, selected, expanded, leaf,
                     row, hasFocus);
-
-            /* panga in the core */
 
             int i = s.indexOf(": ");
             if (i > 0)

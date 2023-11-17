@@ -879,6 +879,11 @@ search.skipBinary.mnemonic=b
 
 search.directoryField=Directory:
 search.directoryField.mnemonic=y
+# Phase 3
+search.dateFilterField=Date Filter:
+search.fromField=Modified From:
+search.toField=Modified To:
+# Phase 3
 search.filterField=Filter:
 search.filterField.mnemonic=f
 glob.tooltip={*.c,*.h} for multiple extensions
@@ -957,11 +962,12 @@ searcherror-bsh.message=An error occurred while performing this operation.\n\
 	the replace string to be interpreted as a BeanShell expression.
 #}}}
 
-#{{{ Empty fileset error dialog
+#{{{ Empty fileset error dialog, Phase 3
 empty-fileset.title=Empty File Set
 empty-fileset.message=The specified search file set contains no files.\n\
 	Please ensure that the file name filter and directory to search\n\
-	(if applicable) are set correctly.
+	(if applicable) are set correctly. It is also possible that the date\n\
+	filter did not find any file in the given range.
 #}}}
 
 #{{{ Can only search local directories dialog
