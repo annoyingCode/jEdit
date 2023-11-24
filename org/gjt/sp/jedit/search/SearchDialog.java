@@ -25,6 +25,11 @@ package org.gjt.sp.jedit.search;
 //{{{ Imports
 import javax.swing.border.*;
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.PlainDocument;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -699,7 +704,7 @@ public class SearchDialog extends EnhancedDialog
 		// Modified from
 		modifiedFrom = new HistoryTextField("search.from");
 		modifiedFrom.setColumns(15);
-		modifiedFrom.addActionListener(actionListener);
+		modifiedFrom.getDocument().addDocumentListener(new DateFilterActionHandler());
 
 		label = new JLabel(jEdit.getProperty("search.fromField"),
 				SwingConstants.RIGHT);
@@ -719,7 +724,7 @@ public class SearchDialog extends EnhancedDialog
 		// Modified to
 		modifiedTo = new HistoryTextField("search.to");
 		modifiedTo.setColumns(15);
-		modifiedTo.addActionListener(actionListener);
+		modifiedTo.getDocument().addDocumentListener(new DateFilterActionHandler());
 
 		label = new JLabel(jEdit.getProperty("search.toField"),
 				SwingConstants.RIGHT);
@@ -1107,7 +1112,8 @@ public class SearchDialog extends EnhancedDialog
 			{
 				synchronizeMultiFileSettings();
 			}
-			else // source is directory or filter field
+			// source is directory or filter field
+			else
 			{
 				// just as if Enter was pressed in another
 				// text field
@@ -1133,6 +1139,46 @@ public class SearchDialog extends EnhancedDialog
 			}
 		} //}}}
 	} //}}}
+
+	//{{{ DateFilterActionHandler class, Phase 3
+	class DateFilterActionHandler extends PlainDocument implements DocumentListener
+	{
+		public void insertUpdate(DocumentEvent e) {
+			Document document = e.getDocument();
+			int length = document.getLength();
+
+			SwingUtilities.invokeLater(() -> {
+				try {
+					if(length > 10)
+						// Do not let the user go beyond DD-MM-YYYY (10 characters)
+                        document.remove((length - 1), 1);
+					if(length == 2 || length == 5)
+					{
+						document.insertString(length, "-", null);
+					}
+				} catch (BadLocationException ex) {
+					ex.printStackTrace();
+				}
+			});
+		}
+		public void removeUpdate(DocumentEvent e) {
+			Document document = e.getDocument();
+			int length = document.getLength();
+
+			SwingUtilities.invokeLater(() -> {
+				try {
+					if (length == 5 || length == 2) {
+						document.remove(length - 1, 1);
+					}
+				} catch (BadLocationException ex) {
+					ex.printStackTrace();
+				}
+			});
+		}
+		public void changedUpdate(DocumentEvent e) {
+			//Plain text components do not fire these events
+		}
+	}
 
 	//{{{ ButtonActionHandler class
 	class ButtonActionHandler implements ActionListener
