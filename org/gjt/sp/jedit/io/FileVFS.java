@@ -379,6 +379,77 @@ public class FileVFS extends VFS
 		return list2;
 	} //}}}
 
+
+
+	//{{{ Phase 3 - _listFiles() method overload
+	public VFSFile[] _listFiles(Object session, String path,
+								Component comp, long modifiedFrom, long modifiedTo)
+	{
+		//{{{ Windows work around
+		/* On Windows, paths of the form X: list the last *working
+		 * directory* on that drive. To list the root of the drive,
+		 * you must use X:\.
+		 *
+		 * However, the VFS browser and friends strip off trailing
+		 * path separators, for various reasons. So to work around
+		 * that, we add a '\' to drive letter paths on Windows.
+		 */
+		if(OperatingSystem.isWindows())
+		{
+			if(path.length() == 2 && path.charAt(1) == ':')
+				path = path.concat(File.separator);
+		} //}}}
+
+		File directory = new File(path);
+		File[] list = null;
+		if(directory.exists())
+		{
+			if (fsView == null)
+				fsView = FileSystemView.getFileSystemView();
+			list = fsView.getFiles(directory,false);
+		}
+		if(list == null)
+		{
+			VFSManager.error(comp,path,"ioerror.directory-error-nomsg",null);
+			return null;
+		}
+
+		VFSFile[] list2 = new VFSFile[list.length];
+
+		// To count the number of non-null elements i.e. files returned between the date range
+		int count = 0;
+		for(int i = 0; i < list.length; i++) {
+			LocalFile file = new LocalFile(list[i]);
+			if (isValidRangeDate(file, modifiedFrom, modifiedTo))
+			{
+				count++;
+				list2[i] = file;
+			}
+		}
+
+		VFSFile[] list3 = new VFSFile[count];
+
+		// The index variable will be used to store the elements in the final list i.e. list3
+		// equal to the length of the returned file elements and avoid out of bounds exception
+		int index = 0;
+		for(int i = 0; i < list.length; i++)
+		{
+			if(!(list2[i] == null))
+			{
+				list3[index++] = list2[i];
+			}
+		}
+		return list3;
+	} //}}}
+
+	//{{{ Phase 3 - isValidRangeDate() method
+	public boolean isValidRangeDate(LocalFile file, long modifiedFrom, long modifiedTo)
+	{
+		long modifiedDate = file.getModified();
+        return modifiedFrom <= modifiedDate && modifiedDate <= modifiedTo;
+    }
+	//}}}
+
 	//{{{ _getFile() method
 	@Override
 	public VFSFile _getFile(Object session, String path,

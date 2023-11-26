@@ -780,7 +780,7 @@ public abstract class VFS
 		String glob, boolean recursive, Component comp )
 		throws IOException
 	{
-		String[] retval = _listDirectory(session, directory, glob, recursive, comp, true, false);
+		String[] retval = _listDirectory(session, directory, glob, recursive, comp, true, false, 0, 0);
 		return retval;
 	} //}}}
 
@@ -809,13 +809,15 @@ public abstract class VFS
 	 */
 	public String[] _listDirectory(Object session, String directory,
 		String glob, boolean recursive, Component comp,
-		boolean skipBinary, boolean skipHidden)
+		boolean skipBinary, boolean skipHidden, long modifiedFrom, long modifiedTo)
 		throws IOException
 	{
+		//{{{ Phase 3 - Added modifiedFrom and modifiedTo parameters
 		VFSFileFilter filter = new GlobVFSFileFilter(glob);
 		return _listDirectory(session, directory, filter,
 				      recursive, comp, skipBinary,
-				      skipHidden);
+				      skipHidden, modifiedFrom, modifiedTo);
+		//}}}
 	} //}}}
 
 	//{{{ _listDirectory() method
@@ -842,13 +844,13 @@ public abstract class VFS
 	 */
 	public String[] _listDirectory(Object session, String directory,
 		VFSFileFilter filter, boolean recursive, Component comp,
-		boolean skipBinary, boolean skipHidden)
+		boolean skipBinary, boolean skipHidden, long modifiedFrom, long modifiedTo)
 		throws IOException
 	{
 		List<String> files = new ArrayList<String>(100);
 
 		listFiles(session,new HashSet<String>(), files,directory,filter,
-			recursive, comp, skipBinary, skipHidden);
+			recursive, comp, skipBinary, skipHidden, modifiedFrom, modifiedTo);
 
 		String[] retVal = files.toArray(new String[files.size()]);
 
@@ -872,6 +874,14 @@ public abstract class VFS
 	public VFSFile[] _listFiles(Object session, String directory,
 		Component comp)
 		throws IOException
+	{
+		VFSManager.error(comp,directory,"vfs.not-supported.list",new String[] { name });
+		return null;
+	} //}}}
+
+	public VFSFile[] _listFiles(Object session, String directory,
+								Component comp, long modifiedFrom, long modifiedTo)
+			throws IOException
 	{
 		VFSManager.error(comp,directory,"vfs.not-supported.list",new String[] { name });
 		return null;
@@ -1190,7 +1200,7 @@ public abstract class VFS
 	//{{{ recursive listFiles() method
 	private void listFiles(Object session, Collection<String> stack,
 		List<String> files, String directory, VFSFileFilter filter, boolean recursive,
-		Component comp, boolean skipBinary, boolean skipHidden) throws IOException
+		Component comp, boolean skipBinary, boolean skipHidden, long modifiedFrom, long modifiedTo) throws IOException
 	{
 		if (recursive && !MiscUtilities.isURL(directory))
 		{
@@ -1212,8 +1222,17 @@ public abstract class VFS
 			}
 		}
 
-		VFSFile[] _files = _listFiles(session,directory,
-			comp);
+		VFSFile[] _files;
+		if(modifiedFrom > 0 && modifiedTo > 0)
+		{
+			_files = _listFiles(session,directory,
+					comp, modifiedFrom, modifiedTo);
+		}
+		else
+		{
+			_files = _listFiles(session,directory, comp);
+		}
+
 		if(_files == null || _files.length == 0)
 			return;
 
@@ -1235,7 +1254,7 @@ public abstract class VFS
 						file.getPath(),comp);
 					listFiles(session,stack,files,
 						canonPath,filter,recursive,
-						comp, skipBinary, skipHidden);
+						comp, skipBinary, skipHidden, modifiedFrom, modifiedTo);
 				}
 			}
 			else // It's a regular file

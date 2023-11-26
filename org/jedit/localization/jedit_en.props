@@ -879,11 +879,12 @@ search.skipBinary.mnemonic=b
 
 search.directoryField=Directory:
 search.directoryField.mnemonic=y
-# Phase 3
+
+# Phase 3 - Date filter labels
 search.dateFilterField=Date Filter:
 search.fromField=Modified From:
 search.toField=Modified To:
-# Phase 3
+
 search.filterField=Filter:
 search.filterField.mnemonic=f
 glob.tooltip={*.c,*.h} for multiple extensions
@@ -966,8 +967,8 @@ searcherror-bsh.message=An error occurred while performing this operation.\n\
 empty-fileset.title=Empty File Set
 empty-fileset.message=The specified search file set contains no files.\n\
 	Please ensure that the file name filter and directory to search\n\
-	(if applicable) are set correctly. It is also possible that the date\n\
-	filter did not find any file in the given range.
+	(if applicable) are set correctly. Additionally, there might be no\n\
+	files within the specified date range.
 #}}}
 
 #{{{ Can only search local directories dialog
@@ -981,6 +982,24 @@ remote-dir-search.message=You have elected to search a non-local directory.\n\
 search-no-selection.title=Nothing Selected
 search-no-selection.message=Please select some text or deactivate the\n\
 	"search in selection" option first.
+#}}}
+
+#{{{ Phase 3 - "Date format is invalid"
+invalid-date-format.title=Invalid Date Format
+invalid-date-format.message=Please make sure the date is in correct DD-MM-YYYY format. Also make\n\
+    sure that the "Modified From" and "Modified To" are filled with actual dates.
+#}}}
+
+#{{{ Phase 3 - "Date range is invalid"
+invalid-date-range.title=Invalid Date Range
+invalid-date-range.message=Please make sure that the date range is valid.\n\
+    "Modified From" cannot be greater than "Modified To".
+#}}}
+
+#{{{ Phase 3 - "Future date error"
+future-date-error.title=Invalid Date Range
+future-date-error.message=Please make sure that the "Modified From" and "Modified To"\n\
+    are before the current date.
 #}}}
 
 #{{{ Paste previous and paste deleted dialogs

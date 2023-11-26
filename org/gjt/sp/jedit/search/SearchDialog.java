@@ -33,10 +33,15 @@ import javax.swing.text.PlainDocument;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
+
+import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.gjt.sp.jedit.EditBus.EBHandler;
 import org.gjt.sp.jedit.browser.VFSBrowser;
@@ -305,7 +310,7 @@ public class SearchDialog extends EnhancedDialog
 		// directory controls
 		focusOrder.add(filter);
 		focusOrder.add(synchronize);
-		//{{{ Phase 3
+		//{{{ Phase 3 - Added focus on modifiedFrom and modifiedTo text fields
 		focusOrder.add(modifiedFrom);
 		focusOrder.add(modifiedTo);
 		//}}}
@@ -349,10 +354,6 @@ public class SearchDialog extends EnhancedDialog
 	private JCheckBox searchSubDirectories;
 	private JCheckBox skipBinaryFiles;
 	private JCheckBox skipHidden;
-
-	// {{{ Phase 3
-//	private JTextField modifiedFrom, modifiedTo;
-	// }}}
 	
 	private JButton choose;
 	private JButton synchronize;
@@ -692,7 +693,7 @@ public class SearchDialog extends EnhancedDialog
 		cons.gridy++;
 		cons.gridwidth = 3;
 
-		//{{{ Phase 3
+		//{{{ Phase 3 - Added JTextFields and their labels
 		label = new JLabel(jEdit.getProperty("search.dateFilterField"),
 				SwingConstants.RIGHT);
 		label.setBorder(new EmptyBorder(0,0,0,12));
@@ -705,6 +706,8 @@ public class SearchDialog extends EnhancedDialog
 		modifiedFrom = new HistoryTextField("search.from");
 		modifiedFrom.setColumns(15);
 		modifiedFrom.getDocument().addDocumentListener(new DateFilterActionHandler());
+		modifiedFrom.addFocusListener(new DateFilterPlaceholder());
+		modifiedFrom.setText("DD-MM-YYYY");
 
 		label = new JLabel(jEdit.getProperty("search.fromField"),
 				SwingConstants.RIGHT);
@@ -725,6 +728,8 @@ public class SearchDialog extends EnhancedDialog
 		modifiedTo = new HistoryTextField("search.to");
 		modifiedTo.setColumns(15);
 		modifiedTo.getDocument().addDocumentListener(new DateFilterActionHandler());
+		modifiedTo.addFocusListener(new DateFilterPlaceholder());
+		modifiedTo.setText("DD-MM-YYYY");
 
 		label = new JLabel(jEdit.getProperty("search.toField"),
 				SwingConstants.RIGHT);
@@ -833,7 +838,8 @@ public class SearchDialog extends EnhancedDialog
 		filter.setEnabled(searchAllBuffers.isSelected()
 			|| searchDirectory.isSelected());
 
-		//{{{ Phase 3
+		//{{{ Phase 3 - Enabling modifiedFrom and modifiedTo text fields after
+		// clicking on Directory option.
 		boolean searchDirs = searchDirectory.isSelected();
 		modifiedFrom.setEnabled(searchDirs);
 		modifiedTo.setEnabled(searchDirs);
@@ -880,6 +886,10 @@ public class SearchDialog extends EnhancedDialog
 			if(filter.length() == 0)
 				filter = "*";
 
+			//{{{ Phase 3 - Storing the dates from Modified From/To text field
+			long from = 0;
+			long to = 0;
+
 			SearchFileSet fileset = SearchAndReplace.getSearchFileSet();
 
 			boolean recurse = searchSubDirectories.isSelected();
@@ -902,6 +912,42 @@ public class SearchDialog extends EnhancedDialog
 				directory = MiscUtilities.constructPath(
 					view.getBuffer().getDirectory(),directory);
 
+				String modifiedFromString = this.modifiedFrom.getText();
+				String modifiedToString = this.modifiedTo.getText();
+				if((!modifiedFromString.isEmpty() || !modifiedToString.isEmpty()) &&
+					!(modifiedFromString.charAt(0) == 'D') || !(modifiedToString.charAt(0) == 'D'))
+				{
+					from = convertDateToMilliseconds(modifiedFromString, "From");
+					to = convertDateToMilliseconds(modifiedToString, "To");
+
+					if(from == -1 || to == -1)
+					// -1 means that the user did not enter the dates in DD-MM-YYYY format
+					// ,and it throws an exception
+					{
+						GUIUtilities.error(view, "invalid-date-format", null);
+						this.modifiedFrom.setText("DD-MM-YYYY");
+						this.modifiedTo.setText("DD-MM-YYYY");
+						return false;
+					}
+					// -2 means that the user has entered date of the future
+					else if(from == -2 || to == -2)
+					{
+						GUIUtilities.error(view, "future-date-error", null);
+						this.modifiedFrom.setText("DD-MM-YYYY");
+						this.modifiedTo.setText("DD-MM-YYYY");
+						return false;
+					}
+					else if(from > to)
+					{
+						GUIUtilities.error(view, "invalid-date-range", null);
+						this.modifiedFrom.setText("DD-MM-YYYY");
+						this.modifiedTo.setText("DD-MM-YYYY");
+						return false;
+					}
+					this.modifiedFrom.addCurrentToHistory();
+					this.modifiedTo.addCurrentToHistory();
+				}
+
 				if((VFSManager.getVFSForPath(directory).getCapabilities()
 					& VFS.LOW_LATENCY_CAP) == 0)
 				{
@@ -918,6 +964,7 @@ public class SearchDialog extends EnhancedDialog
 
 				if(fileset instanceof DirectoryListSet)
 				{
+					//{{{ Phase 3 - Added setModifiedFrom and setModifiedTo function calls
 					DirectoryListSet dset = (DirectoryListSet)fileset;
 					// dset may be a subclass of DirectoryListSet so
 					// we can't create a new DirectoryListSet object here
@@ -925,11 +972,11 @@ public class SearchDialog extends EnhancedDialog
 					dset.setDirectory(directory);
 					dset.setFileFilter(filter);
 					dset.setRecursive(recurse);
+					dset.setModifiedFrom(from);
+					dset.setModifiedTo(to);
 				}
 				else
-					//{{{ Phase 3
-					fileset = new DirectoryListSet(directory,filter,recurse);
-					//}}}
+					fileset = new DirectoryListSet(directory,filter,recurse, from, to);
 			}
 			else
 			{
@@ -968,6 +1015,60 @@ public class SearchDialog extends EnhancedDialog
 		}
 	} //}}}
 
+	//{{{ Phase 3 - Convert string data to seconds since epoch
+	private long convertDateToMilliseconds(String dateString, String startEndDate)
+	{
+		int hours = 0, minutes = 0, seconds = 0;
+		String toDate = "";
+
+		// Define the date format
+		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+		// Get current time in milliseconds to compare with "From" and "To"
+		long currentTimeMillis = System.currentTimeMillis();
+
+		// Get the current date
+		LocalDate currentDate = LocalDate.now();
+
+		// Format the current date from YYYY-MM-DD to MM-DD-YYYY
+		String currentFormattedDate = currentDate.format(dateFormatter);
+
+		try {
+
+			// Parse the string to a Date object
+			LocalDate date = LocalDate.parse(dateString, dateFormatter);
+
+			if(startEndDate.equals("From"))
+			{
+				hours = 0;
+				minutes = 0;
+				seconds = 0;
+			}
+			else if(startEndDate.equals("To"))
+			{
+				toDate = date.format(dateFormatter);
+				hours = 23;
+				minutes = 59;
+				seconds = 59;
+			}
+
+			// Combine LocalDate and LocalTime to create LocalDateTime
+			LocalDateTime dateTime = LocalDateTime.of(date, LocalTime.of(hours, minutes, seconds));
+
+			// Get the time in milliseconds since the epoch
+			long milliseconds = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+			// Return -2 to display a different error message
+			if((milliseconds > currentTimeMillis) && !(currentFormattedDate.equals(toDate)))
+				return -2;
+
+			return milliseconds;
+
+		} catch (Exception e) {
+			return -1;
+		}
+    }
+	//}}}
 	//{{{ closeOrKeepDialog() method
 	private void closeOrKeepDialog()
 	{
@@ -1093,7 +1194,7 @@ public class SearchDialog extends EnhancedDialog
 		}
 	} //}}}
 
-	//{{{ MultiFileActionHandler class, Phase 3
+	//{{{ MultiFileActionHandler class
 	class MultiFileActionHandler implements ActionListener
 	{
 		public void actionPerformed(ActionEvent evt)
@@ -1130,7 +1231,7 @@ public class SearchDialog extends EnhancedDialog
 			{
 				directory.setText(view.getBuffer().getDirectory());
 			}
-			
+
 			if (!jEdit.getBooleanProperty("search.dontSyncFilter", false))
 			{
 				filter.setText('*' + MiscUtilities
@@ -1177,6 +1278,27 @@ public class SearchDialog extends EnhancedDialog
 		}
 		public void changedUpdate(DocumentEvent e) {
 			//Plain text components do not fire these events
+		}
+	}
+
+	//{{{ DateFilterPlaceholder class, Phase 3
+	class DateFilterPlaceholder implements FocusListener {
+		public void focusGained(FocusEvent e) {
+			HistoryTextField date = ((HistoryTextField)e.getSource());
+			if (date.getText().equals("DD-MM-YYYY"))
+			{
+				date.setText("");
+				date.setForeground(Color.BLACK);
+			}
+		}
+		@Override
+		public void focusLost(FocusEvent e) {
+			HistoryTextField date = ((HistoryTextField)e.getSource());
+			if (date.getText().isEmpty())
+			{
+				date.setText("DD-MM-YYYY");
+				date.setForeground(Color.BLACK);
+			}
 		}
 	}
 
@@ -1252,22 +1374,22 @@ public class SearchDialog extends EnhancedDialog
 	class FocusOrder extends FocusTraversalPolicy
 	{
 		private List<Component> components = new ArrayList<Component>();
-		
-		public void add(Component component) 
+
+		public void add(Component component)
 		{
-			components.add(component);	
+			components.add(component);
 		}
-		
+
 		public Component getComponentAfter(Container aContainer, Component aComponent)
 		{
 			int index = components.indexOf(aComponent);
-			if (index == -1) 
+			if (index == -1)
 			{
 				return null;
 			}
 			index = index >= components.size() - 1 ? 0 : index + 1;
 			Component component = components.get(index);
-			if (!(component.isEnabled() && component.isFocusable())) 
+			if (!(component.isEnabled() && component.isFocusable()))
 			{
 				return getComponentAfter(aContainer, component);
 			}
@@ -1276,17 +1398,17 @@ public class SearchDialog extends EnhancedDialog
 				return components.get(index);
 			}
 		}
-		
+
 		public Component getComponentBefore(Container aContainer, Component aComponent)
 		{
 			int index = components.indexOf(aComponent);
-			if (index == -1) 
+			if (index == -1)
 			{
 				return null;
 			}
 			index = index == 0 ? components.size() - 1 : index - 1;
 			Component component = components.get(index);
-			if (!(component.isEnabled() && component.isFocusable())) 
+			if (!(component.isEnabled() && component.isFocusable()))
 			{
 				return getComponentBefore(aContainer, component);
 			}
@@ -1295,27 +1417,27 @@ public class SearchDialog extends EnhancedDialog
 				return components.get(index);
 			}
 		}
-		
+
 		public Component getDefaultComponent(Container aContainer)
 		{
 			return components.size() > 0 ? components.get(0) : null;
 		}
-		
+
 		public Component getFirstComponent(Container aContainer)
 		{
 			return components.size() > 0 ? components.get(0) : null;
 		}
-		
+
 		public Component getInitialComponent(Window window)
 		{
 			return components.size() > 0 ? components.get(0) : null;
 		}
-		
-		public Component getLastComponent(Container aContainer) 		
+
+		public Component getLastComponent(Container aContainer)
 		{
 			return components.size() > 0 ? components.get(components.size() - 1) : null;
 		}
 	} //}}}
-	
+
 	//}}}
 }

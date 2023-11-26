@@ -45,6 +45,15 @@ public class DirectoryListSet extends BufferListSet
 		this.recurse = recurse;
 	} //}}}
 
+	//{{{ Phase 3 - DirectoryListSet constructor overload
+	public DirectoryListSet(String directory, String glob, boolean recurse, long modifiedFrom, long modifiedTo)
+	{
+		this.directory = directory;
+		this.glob = glob;
+		this.recurse = recurse;
+		this.modifiedFrom = modifiedFrom;
+		this.modifiedTo = modifiedTo;
+	} //}}}
 
 
 	//{{{ getDirectory() method
@@ -104,6 +113,24 @@ public class DirectoryListSet extends BufferListSet
 			+ recurse + ')';
 	} //}}}
 
+	//{{{ Phase 3 - get and setModifiedFrom
+	public long getModifiedFrom() { return modifiedFrom ;}
+
+	public void setModifiedFrom(long date)
+	{
+		this.modifiedFrom = date;
+		invalidateCachedList();
+	}
+
+	//{{{ Phase 3 - get and setModifiedTo
+	public long getModifiedTo() { return modifiedTo ;}
+
+	public void setModifiedTo(long date)
+	{
+		this.modifiedTo = date;
+		invalidateCachedList();
+	}
+
 	//{{{ _getFiles() method
 	@Override
 	protected String[] _getFiles(final Component comp)
@@ -119,7 +146,9 @@ public class DirectoryListSet extends BufferListSet
 		{
 			try
 			{
-				return vfs._listDirectory(session,directory,glob,recurse,comp, skipBinary, skipHidden);
+
+				//{{{ Phase 3 - Getting files' names
+				return vfs._listDirectory(session,directory,glob,recurse,comp, skipBinary, skipHidden, modifiedFrom, modifiedTo);
 			}
 			finally
 			{
@@ -137,6 +166,8 @@ public class DirectoryListSet extends BufferListSet
 	//{{{ Private members
 	private String directory;
 	private String glob;
+	//{{{ Phase 3 - Setting the Modified From/To date variables
+	private long modifiedFrom, modifiedTo;
 	private boolean recurse;
 	//}}}
 }
