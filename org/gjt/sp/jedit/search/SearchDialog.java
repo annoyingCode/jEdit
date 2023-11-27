@@ -699,6 +699,7 @@ public class SearchDialog extends EnhancedDialog
 		label.setBorder(new EmptyBorder(0,0,0,12));
 		cons.insets = new Insets(0,0,3,0);
 		cons.weightx = 0.0;
+		cons.gridwidth = 1;
 		layout.setConstraints(label,cons);
 		multifile.add(label);
 
@@ -718,13 +719,14 @@ public class SearchDialog extends EnhancedDialog
 		layout.setConstraints(label,cons);
 		multifile.add(label);
 
-		cons.gridwidth = 3;
+		cons.gridwidth = 1;
 		cons.insets = new Insets(0,0,3,6);
 		cons.weightx = 1.0;
 		layout.setConstraints(modifiedFrom,cons);
 		multifile.add(modifiedFrom);
 
 		// Modified to
+		cons.gridy++;
 		modifiedTo = new HistoryTextField("search.to");
 		modifiedTo.setColumns(15);
 		modifiedTo.getDocument().addDocumentListener(new DateFilterActionHandler());
@@ -735,12 +737,13 @@ public class SearchDialog extends EnhancedDialog
 				SwingConstants.RIGHT);
 		label.setBorder(new EmptyBorder(0,0,0,12));
 		label.setLabelFor(modifiedTo);
-		cons.insets = new Insets(0,0,3,0);
+		cons.insets = new Insets(0,50,3,0);
 		cons.weightx = 0.0;
+		cons.gridwidth = 2;
 		layout.setConstraints(label,cons);
 		multifile.add(label);
 
-		cons.gridwidth = 2;
+		cons.gridwidth = 1;
 		cons.insets = new Insets(0,0,3,6);
 		cons.weightx = 1.0;
 		layout.setConstraints(modifiedTo,cons);
