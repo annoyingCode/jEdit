@@ -918,7 +918,7 @@ public class SearchDialog extends EnhancedDialog
 				String modifiedFromString = this.modifiedFrom.getText();
 				String modifiedToString = this.modifiedTo.getText();
 				if((!modifiedFromString.isEmpty() || !modifiedToString.isEmpty()) &&
-					!(modifiedFromString.charAt(0) == 'D') || !(modifiedToString.charAt(0) == 'D'))
+					!(modifiedFromString.equals("DD-MM-YYYY")) || !(modifiedToString.equals("DD-MM-YYYY")))
 				{
 					from = convertDateToMilliseconds(modifiedFromString, "From");
 					to = convertDateToMilliseconds(modifiedToString, "To");
