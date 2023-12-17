@@ -29,7 +29,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
-import javax.swing.text.PlainDocument;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -1033,7 +1032,7 @@ public class SearchDialog extends EnhancedDialog
 		// Get the current date
 		LocalDate currentDate = LocalDate.now();
 
-		// Format the current date from YYYY-MM-DD to MM-DD-YYYY
+		// Format the current date from YYYY-MM-DD to DD-MM-YYYY
 		String currentFormattedDate = currentDate.format(dateFormatter);
 
 		try {
@@ -1245,7 +1244,7 @@ public class SearchDialog extends EnhancedDialog
 	} //}}}
 
 	//{{{ DateFilterActionHandler class, Phase 3
-	class DateFilterActionHandler extends PlainDocument implements DocumentListener
+	class DateFilterActionHandler implements DocumentListener
 	{
 		public void insertUpdate(DocumentEvent e) {
 			Document document = e.getDocument();
